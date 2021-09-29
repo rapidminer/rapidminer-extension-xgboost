@@ -1,0 +1,40 @@
+buildscript {
+	repositories {
+        mavenCentral()
+		maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+	}
+}
+
+plugins { id 'com.rapidminer.extension' version '0.9.4' }
+
+repositories {
+    mavenCentral()
+	maven { url 'https://maven.rapidminer.com/content/groups/public/' }
+}
+
+extensionConfig {
+    name 'XGBoost'
+    dependencies {
+        rapidminer '9.10.0'
+    }
+}
+
+dependencies {
+    compile ('ml.dmlc:xgboost4j_2.12:1.4.1') {
+        // The extension does not make use of any Scala features...
+        exclude group: 'org.scala-lang', module: 'scala-compiler'
+        exclude group: 'org.scala-lang', module: 'scala-reflect'
+        exclude group: 'org.scala-lang', module: 'scala-library'
+        exclude group: 'org.scalatest', module: 'scalatest_2.12'
+        // ... nor does it support distributed learning:
+        exclude group: 'com.typesafe.akka', module: 'akka-actor_2.12'
+    }
+}
+
+afterEvaluate {
+    license {
+        mapping {
+            java='SLASHSTAR_STYLE'
+        }
+    }
+}

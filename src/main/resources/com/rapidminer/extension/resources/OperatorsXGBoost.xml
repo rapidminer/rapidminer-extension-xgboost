@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<operators name="xgboost" version="6.0" docbundle="com/rapidminer/extension/resources/i18n/OperatorsDocXGBoost">
+    <group key="modeling">
+        <group key="predictive">
+            <operator>
+                <key>xgboost</key>
+                <class>com.rapidminer.extension.xgboost.operator.XGBoostLearner</class>
+                <icon>lightbulb_off.png</icon>
+            </operator>
+        </group>
+    </group>
+</operators>

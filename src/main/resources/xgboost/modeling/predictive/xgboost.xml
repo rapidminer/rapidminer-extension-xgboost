@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../../../../rapidminerreferencemanual/documentation2html.xsl"?>
+<p1:documents xmlns:p1="http://rapid-i.com/schemas/documentation/reference/1.0"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://rapid-i.com/schemas/documentation/reference/1.0 ">
+    <operator key="operator.xgboost:xgboost" locale="en" version="6.0.000">
+        <title>XGBoost</title>
+        <synopsis>Wrapper for the XGBoost gradient boosting framework.</synopsis>
+        <text>
+            <paragraph>
+                The operator automatically selects the learning objective based on the training data.
+                It will use logistic regression and regression with squared loss for categorical and regression
+                problems respectively. The exact objective as well as all other hyper parameters are listed in the
+                model description (result view).
+            </paragraph>
+            <paragraph>
+                XGBoost supports missing values but does not support categorical features out of the box. The operator
+                converts categorical columns into one of the following two formats: if the column has at most two
+                classes, the column is converted into a single numeric vector with 0 and 1 representing the negative and
+                positive class respectively. If the column has no Boolean mapping, the class with the higher index is
+                assumed to be the positive class. Missing values are encoded as such.
+            </paragraph>
+            <paragraph>
+                If the column has more than two classes, a modified one-hot encoding is applied: class vectors are
+                encoded using missing values and the value 1 instead of the more common 0 and 1. In other words, they
+                are encoded as unary instead of binary features.
+            </paragraph>
+            <paragraph>
+                The operator currently exposes almost all XGBoost hyper parameters.
+                See <a>https://xgboost.readthedocs.io/en/latest/parameter.html</a> for details.
+                Take not that some parameters can only be defined in the list of <em>expert parameters</em>.
+            </paragraph>
+        </text>
+        <inputPorts>
+            <port name="training">
+                The training data set.
+            </port>
+            <port name="validation">
+                The validation data set used for early stopping (optional).
+                This port is only available when using the early stopping mode 'custom'.
+            </port>
+        </inputPorts>
+        <outputPorts>
+            <port name="model">
+                The XGBoost model.
+            </port>
+            <port name="exampleSet">
+                The unmodified training data set.
+            </port>
+        </outputPorts>
+        <tutorialProcesses>
+            <tutorialProcess key="process.xgboost.basics" title="Simple classification">
+                <description>
+                    <paragraph>
+                        This example shows how to use the XGBoost operator together with standard RapidMiner operators
+                        for model application an performance measurement.
+                    </paragraph>
+                </description>
+                <process version="9.10.000">
+                    <context>
+                        <input/>
+                        <output/>
+                        <macros/>
+                    </context>
+                    <operator activated="true" class="process" compatibility="9.10.000" expanded="true" name="Process">
+                        <parameter key="logverbosity" value="init"/>
+                        <parameter key="random_seed" value="2001"/>
+                        <parameter key="send_mail" value="never"/>
+                        <parameter key="notification_email" value=""/>
+                        <parameter key="process_duration_for_mail" value="30"/>
+                        <parameter key="encoding" value="SYSTEM"/>
+                        <process expanded="true">
+                            <operator activated="true" class="retrieve" compatibility="9.10.000" expanded="true"
+                                      height="68" name="Retrieve Titanic Training" width="90" x="45" y="85">
+                                <parameter key="repository_entry" value="//Samples/data/Titanic Training"/>
+                            </operator>
+                            <operator activated="true" class="split_data" compatibility="9.10.000" expanded="true"
+                                      height="103" name="Split Data" width="90" x="179" y="85">
+                                <enumeration key="partitions">
+                                    <parameter key="ratio" value="0.7"/>
+                                    <parameter key="ratio" value="0.3"/>
+                                </enumeration>
+                                <parameter key="sampling_type" value="automatic"/>
+                                <parameter key="use_local_random_seed" value="false"/>
+                                <parameter key="local_random_seed" value="1992"/>
+                            </operator>
+                            <operator activated="true" class="xgboost:xgboost" compatibility="0.1.000-SNAPSHOT"
+                                      expanded="true" height="82" name="XGBoost" width="90" x="313" y="34">
+                                <parameter key="booster" value="tree booster"/>
+                                <parameter key="rounds" value="25"/>
+                                <parameter key="early_stopping" value="none"/>
+                                <parameter key="early_stopping_rounds" value="10"/>
+                                <parameter key="learning_rate" value="0.3"/>
+                                <parameter key="min_split_loss" value="0.0"/>
+                                <parameter key="max_depth" value="6"/>
+                                <parameter key="min_child_weight" value="1.0"/>
+                                <parameter key="subsample" value="1.0"/>
+                                <parameter key="tree_method" value="auto"/>
+                                <parameter key="lambda" value="1.0"/>
+                                <parameter key="alpha" value="0.0"/>
+                                <parameter key="sample_type" value="uniform"/>
+                                <parameter key="normalize_type" value="tree"/>
+                                <parameter key="rate_drop" value="0.0"/>
+                                <parameter key="skip_drop" value="0.0"/>
+                                <parameter key="updater" value="shotgun"/>
+                                <parameter key="feature_selector" value="cyclic"/>
+                                <parameter key="top_k" value="0"/>
+                                <enumeration key="expert_parameters"/>
+                            </operator>
+                            <operator activated="true" class="apply_model" compatibility="9.10.000" expanded="true"
+                                      height="82" name="Apply Model" width="90" x="447" y="85">
+                                <list key="application_parameters"/>
+                                <parameter key="create_view" value="false"/>
+                            </operator>
+                            <operator activated="true" class="performance_binominal_classification"
+                                      compatibility="9.10.000" expanded="true" height="82" name="Performance" width="90"
+                                      x="581" y="85">
+                                <parameter key="manually_set_positive_class" value="false"/>
+                                <parameter key="main_criterion" value="first"/>
+                                <parameter key="accuracy" value="true"/>
+                                <parameter key="classification_error" value="false"/>
+                                <parameter key="kappa" value="false"/>
+                                <parameter key="AUC (optimistic)" value="false"/>
+                                <parameter key="AUC" value="false"/>
+                                <parameter key="AUC (pessimistic)" value="false"/>
+                                <parameter key="precision" value="false"/>
+                                <parameter key="recall" value="false"/>
+                                <parameter key="lift" value="false"/>
+                                <parameter key="fallout" value="false"/>
+                                <parameter key="f_measure" value="false"/>
+                                <parameter key="false_positive" value="false"/>
+                                <parameter key="false_negative" value="false"/>
+                                <parameter key="true_positive" value="false"/>
+                                <parameter key="true_negative" value="false"/>
+                                <parameter key="sensitivity" value="false"/>
+                                <parameter key="specificity" value="false"/>
+                                <parameter key="youden" value="false"/>
+                                <parameter key="positive_predictive_value" value="false"/>
+                                <parameter key="negative_predictive_value" value="false"/>
+                                <parameter key="psep" value="false"/>
+                                <parameter key="skip_undefined_labels" value="true"/>
+                                <parameter key="use_example_weights" value="true"/>
+                            </operator>
+                            <connect from_op="Retrieve Titanic Training" from_port="output" to_op="Split Data"
+                                     to_port="example set"/>
+                            <connect from_op="Split Data" from_port="partition 1" to_op="XGBoost"
+                                     to_port="training set"/>
+                            <connect from_op="Split Data" from_port="partition 2" to_op="Apply Model"
+                                     to_port="unlabelled data"/>
+                            <connect from_op="XGBoost" from_port="model" to_op="Apply Model" to_port="model"/>
+                            <connect from_op="Apply Model" from_port="labelled data" to_op="Performance"
+                                     to_port="labelled data"/>
+                            <connect from_op="Performance" from_port="performance" to_port="result 1"/>
+                            <connect from_op="Performance" from_port="example set" to_port="result 2"/>
+                            <portSpacing port="source_input 1" spacing="0"/>
+                            <portSpacing port="sink_result 1" spacing="0"/>
+                            <portSpacing port="sink_result 2" spacing="0"/>
+                            <portSpacing port="sink_result 3" spacing="0"/>
+                            <description align="left" color="green" colored="true" height="92" resized="true"
+                                         width="299" x="325" y="203">The XGBoost learner automatically selects the
+                                learning objective and returns a model compatible with standard RapidMiner operators.
+                            </description>
+                        </process>
+                    </operator>
+                </process>
+            </tutorialProcess>
+            <tutorialProcess key="process.xgboost.early_stopping" title="Early stopping">
+                <description>
+                    <paragraph>
+                        This example shows how to use XGBoost's early stopping with a custom validation set.
+                    </paragraph>
+                </description>
+                <process version="9.10.000">
+                    <context>
+                        <input/>
+                        <output/>
+                        <macros/>
+                    </context>
+                    <operator activated="true" class="process" compatibility="9.10.000" expanded="true" name="Process">
+                        <parameter key="logverbosity" value="init"/>
+                        <parameter key="random_seed" value="2001"/>
+                        <parameter key="send_mail" value="never"/>
+                        <parameter key="notification_email" value=""/>
+                        <parameter key="process_duration_for_mail" value="30"/>
+                        <parameter key="encoding" value="SYSTEM"/>
+                        <process expanded="true">
+                            <operator activated="true" class="retrieve" compatibility="9.10.000" expanded="true"
+                                      height="68" name="Retrieve Titanic Training" width="90" x="45" y="34">
+                                <parameter key="repository_entry" value="//Samples/data/Titanic Training"/>
+                            </operator>
+                            <operator activated="true" class="split_data" compatibility="9.10.000" expanded="true"
+                                      height="103" name="Split Data" width="90" x="179" y="34">
+                                <enumeration key="partitions">
+                                    <parameter key="ratio" value="0.7"/>
+                                    <parameter key="ratio" value="0.3"/>
+                                </enumeration>
+                                <parameter key="sampling_type" value="linear sampling"/>
+                                <parameter key="use_local_random_seed" value="false"/>
+                                <parameter key="local_random_seed" value="1992"/>
+                            </operator>
+                            <operator activated="true" class="xgboost:xgboost" compatibility="0.1.000-SNAPSHOT"
+                                      expanded="true" height="82" name="XGBoost" width="90" x="313" y="34">
+                                <parameter key="booster" value="tree booster"/>
+                                <parameter key="rounds" value="100"/>
+                                <parameter key="early_stopping" value="custom"/>
+                                <parameter key="early_stopping_rounds" value="10"/>
+                                <parameter key="learning_rate" value="0.3"/>
+                                <parameter key="min_split_loss" value="0.0"/>
+                                <parameter key="max_depth" value="6"/>
+                                <parameter key="min_child_weight" value="1.0"/>
+                                <parameter key="subsample" value="1.0"/>
+                                <parameter key="tree_method" value="auto"/>
+                                <parameter key="lambda" value="1.0"/>
+                                <parameter key="alpha" value="0.0"/>
+                                <parameter key="sample_type" value="uniform"/>
+                                <parameter key="normalize_type" value="tree"/>
+                                <parameter key="rate_drop" value="0.0"/>
+                                <parameter key="skip_drop" value="0.0"/>
+                                <parameter key="updater" value="shotgun"/>
+                                <parameter key="feature_selector" value="cyclic"/>
+                                <parameter key="top_k" value="0"/>
+                                <enumeration key="expert_parameters"/>
+                            </operator>
+                            <operator activated="true" class="retrieve" compatibility="9.10.000" expanded="true"
+                                      height="68" name="Retrieve Titanic Unlabeled" width="90" x="313" y="136">
+                                <parameter key="repository_entry" value="//Samples/data/Titanic Unlabeled"/>
+                            </operator>
+                            <operator activated="true" class="apply_model" compatibility="9.10.000" expanded="true"
+                                      height="82" name="Apply Model" width="90" x="447" y="34">
+                                <list key="application_parameters"/>
+                                <parameter key="create_view" value="false"/>
+                            </operator>
+                            <connect from_op="Retrieve Titanic Training" from_port="output" to_op="Split Data"
+                                     to_port="example set"/>
+                            <connect from_op="Split Data" from_port="partition 1" to_op="XGBoost"
+                                     to_port="training set"/>
+                            <connect from_op="Split Data" from_port="partition 2" to_op="XGBoost" to_port="validation"/>
+                            <connect from_op="XGBoost" from_port="model" to_op="Apply Model" to_port="model"/>
+                            <connect from_op="Retrieve Titanic Unlabeled" from_port="output" to_op="Apply Model"
+                                     to_port="unlabelled data"/>
+                            <connect from_op="Apply Model" from_port="labelled data" to_port="result 1"/>
+                            <connect from_op="Apply Model" from_port="model" to_port="result 2"/>
+                            <portSpacing port="source_input 1" spacing="0"/>
+                            <portSpacing port="sink_result 1" spacing="0"/>
+                            <portSpacing port="sink_result 2" spacing="0"/>
+                            <portSpacing port="sink_result 3" spacing="0"/>
+                            <description align="left" color="green" colored="true" height="252" resized="true"
+                                         width="411" x="124" y="223">When using early stopping, XGBoost will use a
+                                holdout set to test the model performance after each boosting iteration.&lt;br&gt;&lt;br&gt;If
+                                the performance does not improve in a given number of iterations, the boosting process
+                                is stopped.&lt;br&gt;&lt;br&gt;When set to 'automatic', the XGBoost learner will use a
+                                random sample of the training data as validation set.&lt;br&gt;&lt;br&gt;If more precise
+                                control over the validation data is required, the 'custom' setting used in the process
+                                above allows to provide the validation set as second input instead.&lt;br&gt;
+                            </description>
+                        </process>
+                    </operator>
+                </process>
+            </tutorialProcess>
+        </tutorialProcesses>
+    </operator>
+</p1:documents>

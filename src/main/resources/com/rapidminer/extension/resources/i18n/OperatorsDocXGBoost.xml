@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<operatorHelp lang="en_EN">
+    <operator>
+        <key>xgboost</key>
+        <name>XGBoost</name>
+        <tags>
+            <tag>Supervised</tag>
+            <tag>Classification</tag>
+            <tag>Regression</tag>
+            <tag>Model</tag>
+            <tag>Gradient</tag>
+            <tag>Boosting</tag>
+            <tag>Ensemble</tag>
+            <tag>Forest</tag>
+            <tag>Trees</tag>
+            <tag>DART</tag>
+        </tags>
+    </operator>
+</operatorHelp>
