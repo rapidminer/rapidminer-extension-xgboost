@@ -137,6 +137,34 @@ public class XGBoostWrapperTests {
 	}
 
 	@Test
+	public void testPredictionOfSingleClass() throws XGBoostError, IOException {
+		Table data = Builders.newTableBuilder(100)
+				.addReal("A", i -> i)
+				.addReal("B", i -> 3 * i)
+				.addBoolean("Label", i -> i % 2 == 0 ? "False" : "True", "True")
+				.addMetaData("Label", ColumnRole.LABEL)
+				.build(CTX);
+
+		XGBoostModel model = XGBoostWrapper.train(data, null, Collections.emptyMap(), 10, 0, () -> true);
+
+		assertNotNull(model);
+		assertEquals(10, model.getIterations());
+		assertEquals("binary:logistic", model.getParameters().get("objective"));
+
+		// The test data contains a single row for which the prediction is positive.
+		Table testData = data.rows(1, 2, CTX);
+		Map<String, Column> scores = new HashMap<>();
+		Column column = XGBoostWrapper.predict(model, testData, scores);
+		assertEquals(Column.TypeId.NOMINAL, column.type().id());
+
+		assertTrue(column.getDictionary().isBoolean());
+		Dictionary dictionary = column.getDictionary();
+		assertEquals("True", dictionary.get(dictionary.getPositiveIndex()));
+		assertEquals("False", dictionary.get(dictionary.getNegativeIndex()));
+		assertEquals(new HashSet<>(Arrays.asList("True", "False")), scores.keySet());
+	}
+
+	@Test
 	public void testBinaryClassification() throws XGBoostError, IOException {
 		Random rng = new Random(123456);
 		Table data = Builders.newTableBuilder(100)

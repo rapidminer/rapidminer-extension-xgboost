@@ -147,10 +147,9 @@ public class XGBoostWrapper {
 
 		Column label = model.getLabelColumn();
 		if (label.type().category() == Column.Category.CATEGORICAL) {
-			Dictionary dictionary = label.getDictionary();
 			return Columns.isAtMostBicategorical(label)
-					? predictBicategorical(predictions, dictionary, scores)
-					: predictCategorical(predictions, dictionary, scores);
+					? predictBicategorical(predictions, label, scores)
+					: predictCategorical(predictions, label, scores);
 		} else {
 			return predictRegression(predictions);
 		}
@@ -188,8 +187,8 @@ public class XGBoostWrapper {
 		return matrix;
 	}
 
-	private static Column predictBicategorical(float[][] predictions, Dictionary dictionary,
-											   Map<String, Column> scores) {
+	private static Column predictBicategorical(float[][] predictions, Column label, Map<String, Column> scores) {
+		Dictionary dictionary = label.getDictionary();
 		int negativeIndex = dictionary.isBoolean() ?
 				dictionary.getNegativeIndex() :
 				IntStream.range(1, dictionary.maximalIndex())
@@ -216,11 +215,12 @@ public class XGBoostWrapper {
 		}
 		scores.put(positiveValue, positiveScore.toColumn());
 
-		return dictionary.isBoolean() ? clazz.toBooleanColumn(positiveValue) : clazz.toColumn();
+		return Columns.changeDictionary(clazz.toColumn(), label);
 	}
 
-	private static Column predictCategorical(float[][] predictions, Dictionary dictionary, Map<String, Column> scores) {
+	private static Column predictCategorical(float[][] predictions, Column label, Map<String, Column> scores) {
 		int nClasses = predictions[0].length;
+		Dictionary dictionary = label.getDictionary();
 		NominalBuffer clazz = Buffers.nominalBuffer(predictions.length);
 		NumericBuffer[] scoreBuffers = new NumericBuffer[nClasses];
 		Arrays.setAll(scoreBuffers, i -> Buffers.realBuffer(predictions.length, false));
@@ -247,7 +247,7 @@ public class XGBoostWrapper {
 			}
 		}
 
-		return clazz.toColumn();
+		return Columns.changeDictionary(clazz.toColumn(), label);
 	}
 
 	private static Column predictRegression(float[][] predictions) {
