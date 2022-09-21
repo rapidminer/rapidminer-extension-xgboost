@@ -41,6 +41,7 @@ import java.util.function.BooleanSupplier;
 
 import org.junit.Test;
 
+import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.column.Dictionary;
 import com.rapidminer.belt.execution.Context;
@@ -51,6 +52,7 @@ import com.rapidminer.belt.reader.Readers;
 import com.rapidminer.belt.table.Builders;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.util.ColumnRole;
+import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.set.TableSplitter;
 import com.rapidminer.operator.UserError;
 
@@ -413,6 +415,55 @@ public class XGBoostWrapperTests {
 				.build(CTX);
 
 		XGBoostWrapper.train(table, null, Collections.emptyMap(), 100, 0, () -> true);
+	}
+
+	@Test
+	public void testClassificationImportanceWeights() throws XGBoostError, IOException {
+		// Column B should always have the highest importance.
+		String[] dictionary = {"One", "Two", "Three", "Four", "Five"};
+		Random rng = new Random(123456);
+		Table data = Builders.newTableBuilder(100)
+				.addReal("A", i -> rng.nextDouble())
+				.addReal("B", i -> (i % 5) * 10 + rng.nextDouble())
+				.addReal("C", i -> 3 * i)
+				.addNominal("Label", i -> dictionary[i % 5])
+				.addMetaData("Label", ColumnRole.LABEL)
+				.build(CTX);
+
+		XGBoostModel model = XGBoostWrapper.train(data, null, Collections.emptyMap(), 100, 0, () -> true);
+		assertNotNull(model);
+
+		AttributeWeights weights = XGBoostWrapper.getWeights(model, new IOTable(data));
+		assertEquals(AttributeWeights.NO_SORTING, weights.getSortingType());
+		assertEquals(AttributeWeights.ORIGINAL_WEIGHTS, weights.getSortingType());
+
+		assertEquals(3, weights.size());
+		assertTrue(weights.getWeight("A") < weights.getWeight("B"));
+		assertTrue(weights.getWeight("C") < weights.getWeight("B"));
+	}
+
+	@Test
+	public void testRegressionImportanceWeights() throws XGBoostError, IOException {
+		// Column C should always have the highest importance.
+		Random rng = new Random(123456);
+		Table data = Builders.newTableBuilder(100)
+				.addReal("A", i -> rng.nextDouble())
+				.addReal("B", i -> (i % 5) * 10)
+				.addReal("C", i -> 3 * i + rng.nextDouble())
+				.addReal("Label", i -> i)
+				.addMetaData("Label", ColumnRole.LABEL)
+				.build(CTX);
+
+		XGBoostModel model = XGBoostWrapper.train(data, null, Collections.emptyMap(), 100, 0, () -> true);
+		assertNotNull(model);
+
+		AttributeWeights weights = XGBoostWrapper.getWeights(model, new IOTable(data));
+		assertEquals(AttributeWeights.NO_SORTING, weights.getSortingType());
+		assertEquals(AttributeWeights.ORIGINAL_WEIGHTS, weights.getSortingType());
+
+		assertEquals(3, weights.size());
+		assertTrue(weights.getWeight("A") < weights.getWeight("C"));
+		assertTrue(weights.getWeight("B") < weights.getWeight("C"));
 	}
 
 }

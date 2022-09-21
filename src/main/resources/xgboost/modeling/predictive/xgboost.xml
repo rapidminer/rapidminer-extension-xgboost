@@ -44,6 +44,9 @@
             <port name="model">
                 The XGBoost model.
             </port>
+            <port name="weights">
+                Returns the <em>total gain</em> across all splits the features are used in.
+            </port>
             <port name="exampleSet">
                 The unmodified training data set.
             </port>

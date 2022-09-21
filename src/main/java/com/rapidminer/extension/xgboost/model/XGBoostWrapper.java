@@ -44,6 +44,7 @@ import com.rapidminer.belt.reader.NumericReader;
 import com.rapidminer.belt.reader.Readers;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.util.ColumnRole;
+import com.rapidminer.example.AttributeWeights;
 
 import ml.dmlc.xgboost4j.java.Booster;
 import ml.dmlc.xgboost4j.java.DMatrix;
@@ -117,6 +118,31 @@ public class XGBoostWrapper {
 				matrix.dispose();
 			}
 		}
+	}
+
+	/**
+	 * Extracts the "total_gain" feature importance scores from the given model.
+	 *
+	 * @param model the wrapped booster
+	 * @param table the reference features
+	 * @return the "total_gain" feature importance scores
+	 * @throws XGBoostError if the score lookup fails
+	 * @throws IOException  if the XGBoost deserialization fails
+	 */
+	public static AttributeWeights getWeights(XGBoostModel model, IOTable table) throws XGBoostError, IOException {
+		Map<String, Double> scores;
+		synchronized (XGB_LOCK) {
+			Booster booster = XGBoost.loadModel(model.getBooster());
+			scores = booster.getScore(model.getTrainingHeader().getTable().labels().toArray(new String[0]), "total_gain");
+			booster.dispose();
+		}
+
+		AttributeWeights weights = new AttributeWeights(table);
+		for (String label : weights.getAttributeNames()) {
+			weights.setWeight(label, scores.getOrDefault(label, 0.0));
+		}
+
+		return weights;
 	}
 
 	/**

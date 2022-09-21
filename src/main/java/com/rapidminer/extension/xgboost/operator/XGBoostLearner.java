@@ -22,6 +22,7 @@
  */
 package com.rapidminer.extension.xgboost.operator;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -35,8 +36,10 @@ import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.belt.table.Tables;
+import com.rapidminer.example.AttributeWeights;
 import com.rapidminer.example.set.TableSplitter;
 import com.rapidminer.extension.xgboost.model.ConversionException;
+import com.rapidminer.extension.xgboost.model.XGBoostModel;
 import com.rapidminer.extension.xgboost.model.XGBoostWrapper;
 import com.rapidminer.operator.IOTableModel;
 import com.rapidminer.operator.Operator;
@@ -134,6 +137,11 @@ public class XGBoostLearner extends AbstractIOTableLearner {
 	}
 
 	@Override
+	public boolean canCalculateWeights() {
+		return true;
+	}
+
+	@Override
 	public Operator cloneOperator(String name, boolean forParallelExecution) {
 		XGBoostLearner clone = (XGBoostLearner) super.cloneOperator(name, forParallelExecution);
 		if (validationSet != null) {
@@ -214,6 +222,16 @@ public class XGBoostLearner extends AbstractIOTableLearner {
 		} catch (ConversionException e) {
 			throw new UserError(null, e, "xgboost.conversion_error", e.getMessage());
 		} catch (XGBoostError e) {
+			throw new UserError(null, e, "xgboost.generic_error", e.getMessage());
+		}
+	}
+
+	@Override
+	public AttributeWeights getWeights(IOTable table) throws OperatorException {
+		XGBoostModel model = getOutputPorts().getPortByName("model").getDataOrNull(XGBoostModel.class);
+		try {
+			return model == null ? null : XGBoostWrapper.getWeights(model, table);
+		} catch (XGBoostError | IOException e) {
 			throw new UserError(null, e, "xgboost.generic_error", e.getMessage());
 		}
 	}
